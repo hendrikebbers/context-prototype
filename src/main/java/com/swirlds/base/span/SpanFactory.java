@@ -45,6 +45,7 @@ public interface SpanFactory {
                 var uuid = UUID.randomUUID().toString();
                 if (data != null) {
                     ThreadContext.addMetadata(spanDefinition.eventType(), data);
+                    ThreadContext.addMetadata("spanId", uuid);
                 }
                 event.begin();
                 event.set(0, spanDefinition.eventType());
@@ -92,6 +93,7 @@ public interface SpanFactory {
                     private void end(final boolean success) {
                         event.set(4, success);
                         event.commit();
+                        ThreadContext.removeMetadata("spanId");
                     }
                 };
             }

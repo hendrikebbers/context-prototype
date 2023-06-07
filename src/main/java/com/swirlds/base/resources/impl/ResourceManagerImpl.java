@@ -49,17 +49,24 @@ public class ResourceManagerImpl implements ResourceManager {
             public void execute(Runnable command, SpanDefinition childSpanDefinition, String data, Span parentSpan) {
                 innerExecutor.execute(() -> {
                     ThreadContext.addMetadata("ResourceManager", name);
-                    if (childSpanDefinition != null) {
-                        Span childSpan = SpanFactory.createSpanFactory(childSpanDefinition).create(parentSpan, data);
-                        try {
+                    ThreadContext.addMetadata("Thread", Thread.currentThread().getName());
+                    try {
+                        if (childSpanDefinition != null) {
+                            Span childSpan = SpanFactory.createSpanFactory(childSpanDefinition)
+                                    .create(parentSpan, data);
+                            try {
+                                command.run();
+                                childSpan.commit();
+                            } catch (Exception e) {
+                                childSpan.fail();
+                                throw e;
+                            }
+                        } else {
                             command.run();
-                            childSpan.commit();
-                        } catch (Exception e) {
-                            childSpan.fail();
-                            throw e;
                         }
-                    } else {
-                        command.run();
+                    } finally {
+                        ThreadContext.removeMetadata("ResourceManager");
+                        ThreadContext.removeMetadata("Thread");
                     }
                 });
             }
