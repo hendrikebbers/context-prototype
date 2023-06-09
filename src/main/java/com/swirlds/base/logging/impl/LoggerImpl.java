@@ -2,13 +2,15 @@ package com.swirlds.base.logging.impl;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-import com.swirlds.base.context.ThreadContext;
+import com.swirlds.base.context.DiagnosticContextAccess;
+import com.swirlds.base.context.impl.DiagnosticContextAccessProvider;
 import com.swirlds.base.logging.Logger;
 import java.time.LocalDateTime;
 
 public class LoggerImpl implements Logger {
 
     private final String name;
+    DiagnosticContextAccess diagnosticContextAccess = DiagnosticContextAccessProvider.getAccess();
 
     public LoggerImpl(String name) {
         this.name = name;
@@ -34,10 +36,10 @@ public class LoggerImpl implements Logger {
         sb.append(" - ");
         sb.append(message);
         sb.append(" - {");
-        ThreadContext.getKeys().forEach(key -> {
+        diagnosticContextAccess.getKeys().forEach(key -> {
             sb.append(key);
             sb.append("=");
-            sb.append(ThreadContext.getValue(key));
+            sb.append(diagnosticContextAccess.getValue(key));
             sb.append(", ");
         });
         sb.append("}");

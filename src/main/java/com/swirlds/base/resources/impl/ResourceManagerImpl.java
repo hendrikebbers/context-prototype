@@ -1,12 +1,12 @@
 package com.swirlds.base.resources.impl;
 
-import com.swirlds.base.context.ThreadContext;
+import com.swirlds.base.context.DiagnosticContext;
 import com.swirlds.base.logging.Logger;
 import com.swirlds.base.resources.ExecutorWithSpanSupport;
 import com.swirlds.base.resources.ResourceManager;
 import com.swirlds.base.span.Span;
 import com.swirlds.base.span.SpanDefinition;
-import com.swirlds.base.span.SpanFactory;
+import com.swirlds.base.span.SpanFactoryProvider;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -48,11 +48,12 @@ public class ResourceManagerImpl implements ResourceManager {
             @Override
             public void execute(Runnable command, SpanDefinition childSpanDefinition, String data, Span parentSpan) {
                 innerExecutor.execute(() -> {
-                    ThreadContext.addMetadata("ResourceManager", name);
-                    ThreadContext.addMetadata("Thread", Thread.currentThread().getName());
+                    DiagnosticContext diagnosticContext = DiagnosticContext.getCurrent();
+                    diagnosticContext.addMetadata("ResourceManager", name);
+                    diagnosticContext.addMetadata("Thread", Thread.currentThread().getName());
                     try {
                         if (childSpanDefinition != null) {
-                            Span childSpan = SpanFactory.createSpanFactory(childSpanDefinition)
+                            Span childSpan = SpanFactoryProvider.createSpanFactory(childSpanDefinition)
                                     .create(parentSpan, data);
                             try {
                                 command.run();
@@ -65,8 +66,8 @@ public class ResourceManagerImpl implements ResourceManager {
                             command.run();
                         }
                     } finally {
-                        ThreadContext.removeMetadata("ResourceManager");
-                        ThreadContext.removeMetadata("Thread");
+                        diagnosticContext.removeMetadata("ResourceManager");
+                        diagnosticContext.removeMetadata("Thread");
                     }
                 });
             }

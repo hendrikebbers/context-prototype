@@ -1,6 +1,6 @@
 package com.swirlds.base.sample;
 
-import com.swirlds.base.context.ThreadContext;
+import com.swirlds.base.context.DiagnosticContext;
 import com.swirlds.base.logging.Logger;
 import com.swirlds.base.span.Span;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class Sample3 {
             }
 
             public void start() {
-                ThreadContext.addMetadata(getType(), getData());
+                DiagnosticContext.getCurrent().addMetadata(getType(), getData());
                 event.begin();
                 event.set(0, getType());
                 event.set(1, getSpanId());
@@ -69,7 +69,7 @@ public class Sample3 {
             @Override
             public void commit() {
                 end(true);
-                ThreadContext.removeMetadata(getType());
+                DiagnosticContext.getCurrent().removeMetadata(getType());
             }
 
             @Override
