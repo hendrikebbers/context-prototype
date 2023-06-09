@@ -47,7 +47,7 @@ processed log messages. The following illustrations provides an example of that 
 
 ![Context based logging](./logger-acces-context.drawio.png)
 
-By implementing this, a simple log.info("Hello World") call can generate the following log message:
+By implementing this, a simple `log.info("Hello World")` call can generate the following log message:
 
 ```
 2023-06-07T11:50:17.345943 - INFO - Hello World - {spanId=5e337baa-1bb8, nodeId=0x3d4e, thread=Thread-1}
@@ -75,8 +75,8 @@ resource manager for the platform and another for the node. Whenever a `Thread` 
 instantly add pertinent information to the thread context of the new thread. Such information may include the resource 
 manager ID, the thread name, and the thread type (native or virtual), for example. As we begin to utilize the [Java 
 concurrency API](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/package-summary.html) 
-more extensively, instead of using the Thread class directly, we can also define task information like 
-the task type and description in the context. A custom Executor can be effortlessly crafted to add such information to 
+more extensively, instead of using the `Thread` class directly, we can also define task information like 
+the task type and description in the context. A custom `Executor` can be effortlessly crafted to add such information to 
 the context before executing a task. The following code snippet offers a glimpse of what that might look like:
 
 ```java
