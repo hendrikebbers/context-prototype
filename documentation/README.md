@@ -1,18 +1,18 @@
 # How to use a context for base operations
 
-This document will describe the idea of a global context concept that can be used by all base facilities to collect and
-provide metadata in an easy way. The concept use several functionalities that are used in microservice environments
-today and maps that concepts to a modulitic monolith.
+This document outlines the concept of a 'global context' that enables all basic facilities to gather and disseminate 
+metadata efficiently. The concept leverages several functionalities currently employed in microservice environments, 
+mapping these concepts to a modular monolith.
 
 ## Definition of a context
 
-When talking about a context a specific state is meant. This state can be specific to the complete process or to a
-thread. In HTTP based services such context is often used to store information about the current request. In our
-scenario the context can be used to store information about a current workflow like a transaction.
+When we refer to a 'context', we are speaking of a specific state. This state can be unique to the entire process or
+specific to a thread. In HTTP based services such context is often used to store information about the current request.
+In our scenario, the context can be leveraged to retain information about a current workflow, such as a transaction.
 
-The data of a context is normally stored in a key-value-map. That means that key-value pairs can easily be stored in a
-context. To keep the context as simple as possible storing string-pairs is a good way to go. Based on that a context can
-be defined by the following api draft:
+The data within a context is typically stored as a key-value map, implying that key-value pairs can be conveniently 
+stored within a context. For simplicity, it is advisable to store pairs as strings. On this premise, a context can be 
+defined by the following API draft:
 
 ```java
 
@@ -30,8 +30,8 @@ public interface Context {
 
 ```
 
-As said a common usecase is to have a thread bound context. That means that the context is bound to the current thread.
-By using `ThreadLocal` this can be easily achieved and the ThreadContext can be accessed in a static and easy way:
+As mentioned, a common use case involves a thread-bound context, meaning that the context is linked to the current thread.
+By using `ThreadLocal` this can be easily achieved, enabling static and straightforward access to the `ThreadContext`:
 
 ```java
 
@@ -39,43 +39,45 @@ ThreadContext.set("key","value");
 
 ```
 
-## The benefit of having context based metadata
+## The advantage of having context based metadata
 
-The benefit of having a context based metadata is that it can be used by all base facilities to collect and provide
-data. A common scenario is logging that can add the metadata of a context automatically to all log messages that are
-handled. The following illustrations shows an example of that behavior:
+The benefit of having a context based metadata is that it can be used by all base facilities for data collection and 
+distribution. A common use case is logging, where the metadata from a context can be automatically appended to all 
+processed log messages. The following illustrations provides an example of that behavior:
 
 ![Context based logging](./logger-acces-context.drawio.png)
 
-By doing so a simple `log.info("Hello World")` call can result in the following log message:
+By implementing this, a simple `log.info("Hello World")` call can generate the following log message:
 
 ```
 2023-06-07T11:50:17.345943 - INFO - Hello World - {spanId=5e337baa-1bb8, nodeId=0x3d4e, thread=Thread-1}
 ```
 
-In that sample the information that is added in the curly brackets is the context metadata that is automatically
-added by the logger. For logging that pattern is called `MDC` (Mapped Diagnostic Context). Using MDC is a common pattern
-that provides a lot of benefit. While we can already extract some good information from the log line it becomes more
-interesting when we use a log aggregation tool like `ELK` (Elasticsearch, Logstash, Kibana). By using such a tool we can
-easily search for all log messages that are related to a specific transaction or workflow. The following illustration
-shows an example of that:
+In the provided example, the information enclosed within the curly brackets represents the context metadata, which is 
+automatically appended by the logger. This pattern is known as *MDC* (Mapped Diagnostic Context) in logging, offering 
+numerous advantages. While the log line already offers valuable information, it becomes even more compelling when we 
+utilize a log aggregation tool such as *ELK* (Elasticsearch, Logstash, Kibana). With such a tool, we can effortlessly 
+search for all log messages related to a specific transaction or workflow. The following illustration provides an 
+example of this:
 
 ![Kibana logging filter](./kibana-filters.png)
 
-As you can see in the image such tooling can handle metadata of log messages (like it defined for example in the GELF
-format) and provide useful views and visualization for such metadata. Like Prometheus and Grafana we can provide a
-Docker based environment of our own log aggregation tooling and provide that functionality to all developers.
+As evident in the image, such tools can manage the metadata of log messages (as defined, for example, in the GELF 
+format) and offer insightful views and visualizations of this metadata. Similar to Prometheus and Grafana, we can 
+develop a Docker-based environment for our own log aggregation tooling, making this functionality accessible 
+to all developers.
 
 ## How a resource manager can use the context
 
-We plan to define a so-called resource manager in future that takes care of the lifecycle of resources like threads.
-Such manager can provide a lot of information to the context. Let's assume we have a specific resource manager for the
-platform and a manager for the node. Whenever a thread is created the resource manager can add that information directly
-to the thread context of the new thread. Such information contains the resource manager id, the thread name and the
-thread type (native, virtual) for example. Once we make more use of the concurrency api of Java instead of using the
-`Thread` class directly we can even define task information like the task type and a description in the context. A
-custom Executor can easily be created that adds such information to the context before executing a task. The following
-code snippet shows how that might look like:
+In the future, we aim to establish a so-called resource manager that will oversee the lifecycle of resources like 
+threads. This manager can supply a wealth of information to the context. Let's envision that we have a specific 
+resource manager for the platform and another for the node. Whenever a `Thread` is created, the resource manager can 
+instantly add pertinent information to the thread context of the new thread. Such information may include the resource 
+manager ID, the thread name, and the thread type (native or virtual), for example. As we begin to utilize the [Java 
+concurrency API](https://docs.oracle.com/javase/8/docs/api/index.html?java/util/concurrent/package-summary.html) 
+more extensively, instead of using the `Thread` class directly, we can also define task information like 
+the task type and description in the context. A custom `Executor` can be effortlessly crafted to add such information to 
+the context before executing a task. The following code snippet offers a glimpse of what that might look like:
 
 ```java
 
@@ -85,8 +87,8 @@ resourceManager.executeTask("checkAccountBalance","This tasks checks the account
 
 ```
 
-As long as the `Runnable` that is passed as a lambda expression is executed the context information about that task is
-stored in the context:
+As long as the `Runnable` that is passed as a lambda expression is executed, the task-related context information 
+remains stored within the context:
 
 ```java
 
@@ -95,8 +97,8 @@ assert"checkAccountBalance".equals(ThreadContext.get("taskName"));
 
 ```
 
-When a logger is used inside the task we will have a lot of information that is automatically added to the log
-message. The following block gives an idea about the metadata that could be part of such log message:
+When a logger is used inside the task we will have a lot of information  is automatically appended to the log message. 
+The following block provides an idea of the metadata that could be incorporated into such a log message:
 
 ```
 resourceManagerId=0x3d4e
@@ -107,25 +109,25 @@ taskDescription=This tasks checks the account balance for 0xf424a
 
 ## Adding tracing
 
-The last sample already provides several information that can be used for tracing. Tracing is a common pattern that is
-used by microservice environments to track the flow of a transaction or a request over several services. The following
-illustration shows an example of that:
+The previous example already furnishes numerous details that can be used for tracing. Tracing is a common pattern 
+utilized by microservice environments to monitor the flow of a transaction or a request across multiple services. The 
+following illustration provides an example of this:
 
 ![Tracing](./apm-distributed-tracing.png)
 
-The illustration shows a request that is handled by several services. In each service a span is created that is part of
-a trace. The trace id is used to identify the complete request. The span id is used to identify the current service.
-Next to that a span can have a parent span.
+The illustration depicts a request being processed by multiple services. In each service, a span is created that forms 
+part of a trace. The trace ID is used to identify the entire request, while the span ID is used to identify the current 
+service. Additionally, a span can have a parent span.
 
-While tracing is mostly used in a microservice environment it can also be used in a monolith. Let's assume we define
-start and end timestamps for each task that is executed. By using that information we can easily create a span for that
-task. In such concept a span already has a lot of information that we could store in the thread context. The following
-illustrations contains a generic overview how such behavior could look like:
+While tracing is predominantly used in a microservice environment, it can also be effectively implemented in a monolith. 
+Let's suppose we define start and end timestamps for each task that is executed. With this information, we can easily 
+create a span for that task. In such a concept, a span already holds a wealth of information that we could store in the 
+thread context. The following illustration provides a generic overview of how this behavior might appear:
 
 ![Spans in a monolith](./spans.drawio.png)
 
-When a logger is used inside a span we will again have additional information that is automatically added to the log
-message:
+When a logger is used within a span, we will once again have additional information that is automatically appended to 
+the log message:
 
 ```
 resourceManagerId=0x3d4e
@@ -139,10 +141,10 @@ spanParentId=0x67f4a
 spanStart=2023-06-07T11:50:17.345943
 ```
 
-Since the spans are bound to the resource handling of the application we can easily create a span for each task that is
-executed. By doing so we do not even need to change the code of the resource manager. The manager will automatically
-create a span. If the calling thread has already a span we can use that span as a parent span. If not we can create a
-span without a parent span. The following code snippet shows how that might look like:
+Given that the spans are tied to the resource management of the application, we can effortlessly create a span for each 
+task that is executed. In doing so, we don't even need to modify the code of the resource manager. The manager will 
+automatically generate a span. If the calling thread already has a span, we can use that span as a parent span. If not, 
+we can create a span without a parent span. The following code snippet demonstrates how that might look:
 
 ```java
 resourceManager.executeTask("executePreHandles","Executes preHandlers for "+transactionId,()->{
@@ -155,36 +157,37 @@ resourceManager.executeTask("executePreHandles","Executes preHandlers for "+tran
 
 ```
 
-In the given scenario the log message would contain information about the current span and can even be linked to the
-task that started the inner task since we know the id of the parent span.
+In the provided scenario, the log message would contain information about the current span and could even be linked to 
+the task that initiated the inner task, as we are aware of the parent span's ID.
 
 ## Visualize tracing
 
-Grafana is currently implementing a tracing feature that can be used to visualize traces. Since we already use Grafana
-that would be a great fit for us. Like any other service we can provide the functionality directly to the developers to
-inspect spans for performance issues. The following illustration shows an example spans that are visualized in Grafana:
+Grafana is currently developing a new tracing feature for its platform that can be used to visualize traces. As we are 
+already using Grafana, this would be a perfect fit for us. Like any other service, we can offer this functionality 
+directly to the developers to examine spans for performance issues. The following illustration depicts an example of 
+spans visualized in Grafana:
 
 ![Grafana tracing](./grafana-tracing.png)
 
-To visualize spans we need to provide the span information in a specific format like we do it for our metrics. Open
-Telemetry already provides a specification for that. Since Open Telemetry is used more and more in the industry it would
-make sense to support that format. Since the tracing in Open Telemetry provides a lot of functionality that we not
-need (information about microservices, http requests,..) we could provide a more lightweight api that uses Open
-Telemetry internally.
+To visualize spans, we need to present the span information in a specific format, much like we do with our metrics. 
+Open Telemetry already provides a [specification] 
+(https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md) for this. Given that
+Open Telemetry is increasingly used within the industry, it would make sense for us to support this format. As the 
+tracing in Open Telemetry provides a wealth of functionality that we do not require (information about microservices, 
+HTTP requests, etc.), we could offer a more lightweight API that employs Open Telemetry internally.
 
 ## Measure performance automatically
 
-Thanks to our metrics api we can easily measure the performance of each span and span type. Let's assume that the span
-api use the metrics api internally and stores execution times (average, max, min) for each span type. By doing so we
-would automatically receive information about the performance of each span type.
+Thanks to our metrics API, we can easily measure the performance of each span and span type. Suppose the span API uses 
+the metrics API internally and records execution times (average, max, min) for each span type. In doing so, we would 
+automatically obtain information about the performance of each span type.
 
 ## Going down the rabbit hole: Measure performance of locks
 
-While the given approache is often used to measure the performance of services in a microprofile world it provides all
-information and functionality to measure much smaller units. Let's assume we want to measure the performance of a lock.
-We already have a quite good api to handle locks by using the `AutoLock` and our `Locks` facade. Today creating and
-using a
-lock to lock a resource looks like this:
+While the approach given is often used to measure the performance of services in a microprofile environment, it provides
+all the necessary information and functionality to measure much smaller units. Let's assume we want to measure the 
+performance of a lock. We already have a quite robust API for handling locks using the `AutoLock` and our `Locks` 
+facade. Currently, creating and using a lock to secure a resource looks like this:
 
 ```java
 AutoLock lock=Locks.createLock();
@@ -195,10 +198,10 @@ AutoLock lock=Locks.createLock();
 
 ```
 
-Let's assume we would add a `String` param to the `createLock()` that is used as the type definition of spans that are
-created whenever the lock instance is locked. Since each span stores execution times (average, max, min) in metrics we
-could automatically get information about the usage of resources and what resources / locks might need a refactoring to
-receive better performance. The following code shows the snippet how that might look like:
+Suppose we add a `String` parameter to the `createLock()` method that is used as the type definition of spans created 
+whenever the lock instance is locked. Since each span records execution times (average, max, min) in metrics, we could 
+automatically gather information about the usage of resources and identify which resources/locks might need refactoring 
+for improved performance. The following code snippet illustrates how that might look:
 
 ```java
 AutoLock lock=Locks.createLock("transactionQueue");
@@ -209,16 +212,21 @@ AutoLock lock=Locks.createLock("transactionQueue");
 
 ```
 
-One problem with such small spans might be that we create a lot of spans. Based on that the visualization might become
-problematic. While the metrics will give a good overview about the performance of each span type we might need concrete
-numbers for span instances at runtime.
+One potential issue when working with small spans is the resulting increase in total number of spans. This could 
+potentially lead to complications when visualizing the data. Although the metrics can provide an overall picture of 
+each span type's performance, we may still need specific numbers for individual span instances at runtime for 
+detailed analysis.
 
 ## Making use of JFR
 
-Since Java 11 the JFR api is part of the JDK. JFR is a great tool to measure performance of Java applications. One
-benefit of JFR is the support for custom events: An application can define custom JFR events that will be fired during
-execution. Such events can be monitored by any tool that supports JFR like Java Mission Control (JMC) or IntelliJ. The
-Profiler of IntelliJ can be used to inspect a running application and collect all the JFR events of that application. By
-doing so we can easily collect all the needed JFR events of a running application and analyze them. If the ending of
-each span would create a custom JFR event we can use them to analyze the performance of a specific span type in IntelliJ
-by looking at all individual events. 
+Java 11 introduced the Java Flight Recorder (JFR) API as a part of the JDK, providing a powerful tool to measure Java 
+application performance. One of the standout features of JFR is its support for custom events. This allows an 
+application to define and trigger custom JFR events during its execution.
+
+These events can be monitored by any tool that supports JFR, such as Java Mission Control (JMC) or IntelliJ.
+For instance, IntelliJ's Profiler can be employed to inspect a running application and gather all its JFR events. 
+This capability enables us to collect and analyze all the necessary JFR events from a running application with 
+relative ease.
+
+Moreover, if we configure our application so that the end of each span triggers a custom JFR event, we can leverage 
+these events to scrutinize the performance of a specific span type in IntelliJ by examining each individual event. 
